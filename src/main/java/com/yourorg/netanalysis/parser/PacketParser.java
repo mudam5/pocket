@@ -28,7 +28,7 @@ public class PacketParser {
                 r.dstPort = tcp.getHeader().getDstPort().valueAsInt();
 
                 // Use built-in method for TCP flags
-                r.tcpFlags = tcp.getHeader().getRawFlags();
+                r.tcpFlags = tcp.getHeader().getFlags();
 
                 r.payloadLen = tcp.getPayload() != null ? tcp.getPayload().length() : 0;
 
