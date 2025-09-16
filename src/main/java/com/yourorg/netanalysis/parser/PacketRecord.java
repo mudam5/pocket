@@ -1,14 +1,21 @@
-package com.yourorg.netanalysis.parser;
-
+package com.yourorg.netanalysis.model;
+ 
+import java.time.Instant;
+ 
 public class PacketRecord {
-    public String srcIp;
+    public Instant timestamp;
+    public String srcMac;
+    public String dstMac;
+    public String srcip;
     public String dstIp;
     public Integer srcPort;
     public Integer dstPort;
-    public int payloadLen;
-
-    public boolean synFlag;
-    public boolean ackFlag;
-    public boolean finFlag;
-    public boolean rstFlag;
+    public String protocol;
+    public Integer iplen;
+    public Integer payloadLen;
+    public Integer tcpFlags;
+ 
+    public PacketRecord() {
+        this.timestamp = Instant.now();
+    }
 }
