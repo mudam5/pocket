@@ -1,46 +1,54 @@
 package com.yourorg.netanalysis.parser;
-
-import org.pcap4j.core.NotOpenException;
-import org.pcap4j.core.PcapNativeException;
-import org.pcap4j.packet.IpV4Packet;
+ 
 import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.TcpPacket;
 import org.pcap4j.packet.UdpPacket;
-
-// IMPORT PacketRecord
+import org.pcap4j.packet.namednumber.IpNumber;
+ 
 import com.yourorg.netanalysis.model.PacketRecord;
-
+ 
 public class PacketParser {
-
-    // Make parse() non-static
-    public PacketRecord parse(Packet packet) throws PcapNativeException, NotOpenException {
+    public static PacketRecord parse(Packet p) {
         PacketRecord r = new PacketRecord();
-
-        IpV4Packet ipV4 = packet.get(IpV4Packet.class);
-        if (ipV4 != null) {
-            r.srcIp = ipV4.getHeader().getSrcAddr().getHostAddress();
-            r.dstIp = ipV4.getHeader().getDstAddr().getHostAddress();
+ 
+        if (p.contains(IpV4Packet.class)) {
+            IpV4Packet ip = p.get(IpV4Packet.class);
+ 
+            r.srcip = ip.getHeader().getSrcAddr().getHostAddress();
+            r.dstIp = ip.getHeader().getDstAddr().getHostAddress();
+            r.iplen = ip.getHeader().getTotalLengthAsInt();
+ 
+            IpNumber proto = ip.getHeader().getProtocol();
+            r.protocol = proto.name();
+ 
+            if (proto.equals(IpNumber.TCP) && p.contains(TcpPacket.class)) {
+                TcpPacket tcp = p.get(TcpPacket.class);
+                TcpPacket.TcpHeader tcpHeader = tcp.getHeader();
+ 
+                r.srcPort = tcpHeader.getSrcPort().valueAsInt();
+                r.dstPort = tcpHeader.getDstPort().valueAsInt();
+ 
+                int flags = 0;
+                if (tcpHeader.getUrg()) flags |= 0x20;
+                if (tcpHeader.getAck()) flags |= 0x10;
+                if (tcpHeader.getPsh()) flags |= 0x08;
+                if (tcpHeader.getRst()) flags |= 0x04;
+                if (tcpHeader.getSyn()) flags |= 0x02;
+                if (tcpHeader.getFin()) flags |= 0x01;
+                r.tcpFlags = flags;
+ 
+                r.payloadLen = (tcp.getPayload() != null) ? tcp.getPayload().length() : 0;
+            }
+            else if (proto.equals(IpNumber.UDP) && p.contains(UdpPacket.class)) {
+                UdpPacket udp = p.get(UdpPacket.class);
+ 
+                r.srcPort = udp.getHeader().getSrcPort().valueAsInt();
+                r.dstPort = udp.getHeader().getDstPort().valueAsInt();
+                r.payloadLen = (udp.getPayload() != null) ? udp.getPayload().length() : 0;
+            }
         }
-
-        TcpPacket tcp = packet.get(TcpPacket.class);
-        if (tcp != null) {
-            r.srcPort = tcp.getHeader().getSrcPort().valueAsInt();
-            r.dstPort = tcp.getHeader().getDstPort().valueAsInt();
-            r.payloadLen = tcp.getPayload() != null ? tcp.getPayload().length() : 0;
-
-            r.synFlag = tcp.getHeader().getSyn();
-            r.ackFlag = tcp.getHeader().getAck();
-            r.finFlag = tcp.getHeader().getFin();
-            r.rstFlag = tcp.getHeader().getRst();
-        }
-
-        UdpPacket udp = packet.get(UdpPacket.class);
-        if (udp != null) {
-            r.srcPort = udp.getHeader().getSrcPort().valueAsInt();
-            r.dstPort = udp.getHeader().getDstPort().valueAsInt();
-            r.payloadLen = udp.getPayload() != null ? udp.getPayload().length() : 0;
-        }
-
         return r;
     }
 }
+ 
