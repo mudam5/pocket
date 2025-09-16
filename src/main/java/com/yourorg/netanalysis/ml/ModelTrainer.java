@@ -5,6 +5,7 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
 import smile.data.vector.IntVector;
+import java.util.Properties;
 
 public class ModelTrainer {
 
@@ -45,7 +46,9 @@ public class ModelTrainer {
         DataFrame features = DataFrame.of(featureVectors);
         DataFrame df = features.merge(labels);
 
-        // Train RandomForest with 100 trees
-        return RandomForest.fit(Formula.lhs("label"), df, 100);
+        // Train RandomForest with 100 trees using Properties
+        Properties rfProps = new Properties();
+        rfProps.setProperty("smile.randomforest.trees", "100");
+        return RandomForest.fit(Formula.lhs("label"), df, rfProps);
     }
 }
