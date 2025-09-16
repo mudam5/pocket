@@ -7,36 +7,33 @@ import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.TcpPacket;
 import org.pcap4j.packet.UdpPacket;
 
+// IMPORT PacketRecord
 import com.yourorg.netanalysis.model.PacketRecord;
 
 public class PacketParser {
 
-    // Parses a single packet and returns a PacketRecord
+    // Make parse() non-static
     public PacketRecord parse(Packet packet) throws PcapNativeException, NotOpenException {
         PacketRecord r = new PacketRecord();
 
-        // Handle IPv4 packets
         IpV4Packet ipV4 = packet.get(IpV4Packet.class);
         if (ipV4 != null) {
             r.srcIp = ipV4.getHeader().getSrcAddr().getHostAddress();
             r.dstIp = ipV4.getHeader().getDstAddr().getHostAddress();
         }
 
-        // Handle TCP packets
         TcpPacket tcp = packet.get(TcpPacket.class);
         if (tcp != null) {
             r.srcPort = tcp.getHeader().getSrcPort().valueAsInt();
             r.dstPort = tcp.getHeader().getDstPort().valueAsInt();
             r.payloadLen = tcp.getPayload() != null ? tcp.getPayload().length() : 0;
 
-            // TCP flags example (Ece/Cwr not available in 1.8.1)
             r.synFlag = tcp.getHeader().getSyn();
             r.ackFlag = tcp.getHeader().getAck();
             r.finFlag = tcp.getHeader().getFin();
             r.rstFlag = tcp.getHeader().getRst();
         }
 
-        // Handle UDP packets
         UdpPacket udp = packet.get(UdpPacket.class);
         if (udp != null) {
             r.srcPort = udp.getHeader().getSrcPort().valueAsInt();
