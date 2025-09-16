@@ -1,10 +1,6 @@
 package com.yourorg.netanalysis.parser;
  
-import org.pcap4j.packet.Packet;
-import org.pcap4j.packet.IpV4Packet;
-import org.pcap4j.packet.IpNumber;
-import org.pcap4j.packet.TcpPacket;
-import org.pcap4j.packet.UdpPacket;
+import org.pcap4j.*;
  
 public class PacketParser {
  
