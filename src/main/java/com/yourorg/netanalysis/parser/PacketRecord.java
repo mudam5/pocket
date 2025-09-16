@@ -1,4 +1,4 @@
-package com.yourorg.netanalysis.model;
+package com.yourorg.netanalysis.parser;
  
 import java.time.Instant;
  
