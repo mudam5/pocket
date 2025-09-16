@@ -15,9 +15,9 @@ public class PacketParser {
         if (p.contains(IpV4Packet.class)) {
             IpV4Packet ip = p.get(IpV4Packet.class);
  
-            r.srcip = ip.getHeader().getSrcAddr().getHostAddress();
+            r.srcIp = ip.getHeader().getSrcAddr().getHostAddress();
             r.dstIp = ip.getHeader().getDstAddr().getHostAddress();
-            r.iplen = ip.getHeader().getTotalLengthAsInt();
+            r.ipLen = ip.getHeader().getTotalLengthAsInt();
  
             IpNumber proto = ip.getHeader().getProtocol();
             r.protocol = proto.name();
