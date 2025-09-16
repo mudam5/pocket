@@ -6,12 +6,12 @@ public class PacketRecord {
     public Instant timestamp;
     public String srcMac;
     public String dstMac;
-    public String srcip;
+    public String srcIp;
     public String dstIp;
     public Integer srcPort;
     public Integer dstPort;
     public String protocol;
-    public Integer iplen;
+    public Integer ipLen;
     public Integer payloadLen;
     public Integer tcpFlags;
  
