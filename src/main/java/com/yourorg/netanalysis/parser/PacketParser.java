@@ -6,7 +6,7 @@ import org.pcap4j.packet.TcpPacket;
 import org.pcap4j.packet.UdpPacket;
 import org.pcap4j.packet.namednumber.IpNumber;
  
-import com.yourorg.netanalysis.model.PacketRecord;
+import com.yourorg.netanalysis.parser.PacketRecord;
  
 public class PacketParser {
     public static PacketRecord parse(Packet p) {
