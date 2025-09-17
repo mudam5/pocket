@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/netanalysis
     username: postgres
-    password: bbb49da3ad6a40bab35f15ecf427a007
+    password: postgres
   jpa:
     hibernate:
       ddl-auto: update
