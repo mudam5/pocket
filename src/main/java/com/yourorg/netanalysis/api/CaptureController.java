@@ -4,9 +4,12 @@ import com.yourorg.netanalysis.capture.PcapCaptureService;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.packet.Packet;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/capture")
@@ -18,56 +21,109 @@ public class CaptureController {
         this.captureService = captureService;
     }
 
+    /**
+     * Start capturing on ALL interfaces
+     */
     @PostMapping("/start/all")
-    public String startAll(@RequestParam(required = false) String filter) {
-        captureService.startCaptureOnAllInterfaces(filter, this::handlePacket, null);
-        return "✅ Started capturing on ALL interfaces.";
+    public ResponseEntity<?> startAll(@RequestParam(required = false) String filter,
+                                      @RequestParam(defaultValue = "capture") String filePrefix) {
+        try {
+            captureService.startCaptureOnAllInterfaces(filter, this::handlePacket, filePrefix);
+            return ResponseEntity.ok(Map.of(
+                    "status", "✅ started",
+                    "interfaces", Pcaps.findAllDevs().stream()
+                            .map(PcapNetworkInterface::getName)
+                            .collect(Collectors.toList())
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
     }
 
+    /**
+     * Start capturing on a single interface
+     */
     @PostMapping("/start/{nifName}")
-    public String startOne(@PathVariable String nifName,
-                           @RequestParam(required = false) String filter) {
+    public ResponseEntity<?> startOne(@PathVariable String nifName,
+                                      @RequestParam(required = false) String filter,
+                                      @RequestParam(defaultValue = "capture") String filePrefix) {
         try {
             PcapNetworkInterface nif = Pcaps.getDevByName(nifName);
             if (nif == null) {
-                return "❌ No such interface: " + nifName;
+                return ResponseEntity.badRequest().body(Map.of("error", "No such interface: " + nifName));
             }
-            captureService.startCaptureOnInterface(nif, filter, this::handlePacket, null);
-            return "✅ Started capturing on interface: " + nifName;
+            captureService.startCaptureOnInterface(nif, filter, this::handlePacket, filePrefix);
+            return ResponseEntity.ok(Map.of(
+                    "status", "✅ started",
+                    "interface", nifName
+            ));
         } catch (Exception e) {
-            return "❌ Error: " + e.getMessage();
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 
+    /**
+     * Stop capture on one interface
+     */
     @PostMapping("/stop/{nifName}")
-    public String stopOne(@PathVariable String nifName) {
+    public ResponseEntity<?> stopOne(@PathVariable String nifName) {
         captureService.stopCaptureOnInterface(nifName);
-        return "🛑 Stopped capture on interface: " + nifName;
+        return ResponseEntity.ok(Map.of(
+                "status", "🛑 stopped",
+                "interface", nifName
+        ));
     }
 
+    /**
+     * Stop capture on all interfaces
+     */
     @PostMapping("/stop/all")
-    public String stopAll() {
+    public ResponseEntity<?> stopAll() {
         captureService.stopAllCaptures();
-        return "🛑 Stopped capture on ALL interfaces.";
+        return ResponseEntity.ok(Map.of(
+                "status", "🛑 stopped all"
+        ));
     }
 
+    /**
+     * Read packets from a pcap file
+     */
     @PostMapping("/read")
-    public String readFile(@RequestParam String filePath) {
+    public ResponseEntity<?> readFile(@RequestParam String filePath) {
         try {
             captureService.readPcapFile(filePath, this::handlePacket);
-            return "📂 Finished reading packets from file: " + filePath;
+            return ResponseEntity.ok(Map.of(
+                    "status", "📂 finished reading",
+                    "file", filePath
+            ));
         } catch (Exception e) {
-            return "❌ Error reading file: " + e.getMessage();
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 
+    /**
+     * List all interfaces in a JSON-friendly format
+     */
     @GetMapping("/interfaces")
-    public List<PcapNetworkInterface> listInterfaces() throws Exception {
-        return Pcaps.findAllDevs();
+    public ResponseEntity<?> listInterfaces() {
+        try {
+            List<Map<String, String>> interfaces = Pcaps.findAllDevs().stream()
+                    .map(nif -> Map.of(
+                            "name", nif.getName(),
+                            "description", nif.getDescription() != null ? nif.getDescription() : "N/A"
+                    ))
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(interfaces);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
     }
 
+    /**
+     * Packet handler: You can enrich this to parse & push to DB/Kafka
+     */
     private void handlePacket(Packet packet) {
-        System.out.println("📦 Captured packet: " + packet);
-        // 👉 TODO: Parse and push structured data (src/dst IP, ports, protocol) to DB/Kafka
+        System.out.println("📦 Packet: " + packet);
+        // Example: Extract protocol info here for DB/Kafka pipeline
     }
 }
