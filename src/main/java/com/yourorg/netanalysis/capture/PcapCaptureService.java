@@ -9,10 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.EOFException;
 import java.util.concurrent.*;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.concurrent.TimeoutException;
-
 
 @Service
 public class PcapCaptureService {
@@ -49,6 +47,8 @@ public class PcapCaptureService {
 
         PacketListener listener = packet -> {
             try {
+                // Log each captured packet for debugging
+                logger.info("Captured packet: {}", packet);
                 packetConsumer.accept(packet);
             } catch (Exception ex) {
                 logger.error("Error processing packet", ex);
@@ -57,6 +57,7 @@ public class PcapCaptureService {
 
         exec.submit(() -> {
             try {
+                logger.info("Starting packet capture on interface: {}", nifName);
                 handle.loop(-1, listener);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -91,6 +92,7 @@ public class PcapCaptureService {
             while (true) {
                 try {
                     packet = reader.getNextPacketEx();
+                    logger.info("Read packet from file: {}", packet);
                     packetConsumer.accept(packet);
                 } catch (EOFException eof) {
                     break; // finished reading file
