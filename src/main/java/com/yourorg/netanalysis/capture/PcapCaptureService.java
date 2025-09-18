@@ -47,12 +47,13 @@ public class PcapCaptureService {
                         .promiscuousMode(PcapNetworkInterface.PromiscuousMode.PROMISCUOUS)
                         .timeoutMillis(10);
 
-                if (filter != null && !filter.isEmpty()) {
-                    builder.filter(filter, BpfProgram.BpfCompileMode.OPTIMIZE);
-                }
-
                 PcapHandle handle = builder.build();
                 handleMap.put(nif.getName(), handle);
+
+                // ✅ Apply filter here (after build)
+                if (filter != null && !filter.isEmpty()) {
+                    handle.setFilter(filter, BpfProgram.BpfCompileMode.OPTIMIZE);
+                }
 
                 PcapDumper dumper = null;
                 if (dumpFilePath != null) {
